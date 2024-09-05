@@ -31,6 +31,7 @@ ALLWIFIBOARDS:= \
 	avm_fritzrepeater-1200 \
 	buffalo_wtr-m2133hp \
 	cellc_rtl30vw \
+	cmcc_rax3000q \
 	devolo_magic-2-wifi-next \
 	dlink_dap2610 \
 	edgecore_ecw5410 \
@@ -51,32 +52,38 @@ ALLWIFIBOARDS:= \
 	nec_wg2600hp3 \
 	plasmacloud_pa1200 \
 	plasmacloud_pa2200 \
-	qxwlan_e2600ac
+	qxwlan_e2600ac \
+	redmi_ax3000 \
+	xiaomi_cr881x
 
 ALLWIFIPACKAGES:=$(foreach BOARD,$(ALLWIFIBOARDS),ipq-wifi-$(BOARD))
 
 define Package/ipq-wifi-default
-  SUBMENU:=ath10k Board-Specific Overrides
+  SUBMENU:=ath Board-Specific Overrides
   SECTION:=firmware
   CATEGORY:=Firmware
-  DEPENDS:=@(TARGET_ipq40xx||TARGET_ipq806x)
+  DEPENDS:=@(TARGET_ipq40xx||TARGET_ipq50xx||TARGET_ipq806x)
   TITLE:=Custom Board
 endef
 
 define ipq-wifi-install-one-to
-  $(INSTALL_DIR)  $(2)/lib/firmware/ath10k/$(3)/
-  $(INSTALL_DATA) $(1) $(2)/lib/firmware/ath10k/$(3)/board-2.bin
+  $(INSTALL_DIR)  $(3)/lib/firmware/$(1)/$(4)/
+  $(INSTALL_DATA) $(2) $(3)/lib/firmware/$(1)/$(4)/board-2.bin
 endef
 
 define ipq-wifi-install-one
+  $(if $(filter $(suffix $(1)),.IPQ5018 .ipq5018),\
+    $(call ipq-wifi-install-one-to,ath11k,$(1),$(2),IPQ5018/hw1.0),\
   $(if $(filter $(suffix $(1)),.QCA4019 .qca4019),\
-    $(call ipq-wifi-install-one-to,$(1),$(2),QCA4019/hw1.0),\
+    $(call ipq-wifi-install-one-to,ath10k,$(1),$(2),QCA4019/hw1.0),\
   $(if $(filter $(suffix $(1)),.QCA9888 .qca9888),\
-    $(call ipq-wifi-install-one-to,$(1),$(2),QCA9888/hw2.0),\
+    $(call ipq-wifi-install-one-to,ath10k,$(1),$(2),QCA9888/hw2.0),\
   $(if $(filter $(suffix $(1)),.QCA9984 .qca9984),\
-    $(call ipq-wifi-install-one-to,$(1),$(2),QCA9984/hw1.0),\
+    $(call ipq-wifi-install-one-to,ath10k,$(1),$(2),QCA9984/hw1.0),\
+  $(if $(filter $(suffix $(1)),.QCN6122 .qcn6122),\
+    $(call ipq-wifi-install-one-to,ath11k,$(1),$(2),qcn6122/hw1.0),\
     $(error Unrecognized board-file suffix '$(suffix $(1))' for '$(1)')\
-  )))
+  )))))
 
 endef
 # Blank line required at end of above define due to foreach context
@@ -118,6 +125,7 @@ $(eval $(call generate-ipq-wifi-package,asus_rt-ac42u,ASUS RT-AC42U))
 $(eval $(call generate-ipq-wifi-package,avm_fritzrepeater-1200,AVM FRITZRepeater 1200))
 $(eval $(call generate-ipq-wifi-package,buffalo_wtr-m2133hp,Buffalo WTR-M2133HP))
 $(eval $(call generate-ipq-wifi-package,cellc_rtl30vw, Cell C RTL30VW))
+$(eval $(call generate-ipq-wifi-package,cmcc_rax3000q,CMCC RAX3000Q))
 $(eval $(call generate-ipq-wifi-package,devolo_magic-2-wifi-next,devolo Magic 2 WiFi next))
 $(eval $(call generate-ipq-wifi-package,dlink_dap2610,D-Link DAP-2610))
 $(eval $(call generate-ipq-wifi-package,edgecore_ecw5410,Edgecore ECW5410))
@@ -139,5 +147,7 @@ $(eval $(call generate-ipq-wifi-package,nec_wg2600hp3,NEC Platforms WG2600HP3))
 $(eval $(call generate-ipq-wifi-package,plasmacloud_pa1200,Plasma Cloud PA1200))
 $(eval $(call generate-ipq-wifi-package,plasmacloud_pa2200,Plasma Cloud PA2200))
 $(eval $(call generate-ipq-wifi-package,qxwlan_e2600ac,Qxwlan E2600AC))
+$(eval $(call generate-ipq-wifi-package,redmi_ax3000,Redmi AX3000))
+$(eval $(call generate-ipq-wifi-package,xiaomi_cr881x,Xiaomi CR881x))
 
 $(foreach PACKAGE,$(ALLWIFIPACKAGES),$(eval $(call BuildPackage,$(PACKAGE))))
