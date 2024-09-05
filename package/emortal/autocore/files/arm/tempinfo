@@ -16,6 +16,6 @@ if grep -q "ipq40xx" "/etc/openwrt_release"; then
 
 	echo -n "WiFi:${mt76_temp} ${wifi_temp}"
 else
-	cpu_temp="$(awk '{printf("%.1f°C", $0 / 1000)}' "$THERMAL_PATH/thermal_zone0/temp")"
+	cpu_temp="$(cat "$THERMAL_PATH/thermal_zone0/temp").0°C"
 	echo -n "CPU: ${cpu_temp}, WiFi: ${wifi_temp}"
 fi
