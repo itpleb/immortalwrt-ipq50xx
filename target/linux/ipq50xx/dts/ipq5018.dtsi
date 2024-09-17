@@ -2,11 +2,9 @@
 	// Search in arch/arm/boot/dts/
 	#include <../../../arm64/boot/dts/qcom/ipq5018.dtsi>
 	#include <ipq5018.dtsi>
-	#include "ipq50xx-cpu-opp.dtsi"
 #elif __AARCH64__
 	// Search in arch/arm64/boot/dts/
 	#include <qcom/ipq5018.dtsi>
-	#include "ipq50xx-cpu-opp.dtsi"
 #else
 	#error "Please define __ARM32__ or __AARCH64__ when compiling dts"
 #endif
