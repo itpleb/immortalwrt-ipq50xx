@@ -1,9 +1,0 @@
---- a/drivers/clk/qcom/apss-ipq5018.c
-+++ b/drivers/clk/qcom/apss-ipq5018.c
-@@ -105,6 +105,7 @@
- 	F(24000000, P_XO, 1, 0, 0),
- 	F(800000000, P_APSS_PLL_EARLY, 1, 0, 0),
- 	F(1008000000, P_APSS_PLL_EARLY, 1, 0, 0),
-+	F(1320000000, P_APSS_PLL_EARLY, 1, 0, 0),
- 	{ }
- };
