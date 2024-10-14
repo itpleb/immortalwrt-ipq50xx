@@ -1,0 +1,29 @@
+From 56b369c30c2005c1b554f75226e6b0f5e2e51b26 Mon Sep 17 00:00:00 2001
+From: baili233 <2389730775@qq.com>
+Date: Mon, 14 Oct 2024 16:48:35 +0800
+Subject: [PATCH] add-GD5Fx-nand-support
+
+---
+ drivers/mtd/nand/raw/nand_ids.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/mtd/nand/raw/nand_ids.c b/drivers/mtd/nand/raw/nand_ids.c
+index 8d3659883..4e06d2d4f 100644
+--- a/drivers/mtd/nand/raw/nand_ids.c
++++ b/drivers/mtd/nand/raw/nand_ids.c
+@@ -86,6 +86,12 @@ struct nand_flash_dev nand_flash_ids[] = {
+ 	{"GD5F1GQ5REYIH SPI NAND 1G 1.8V",
+ 		{ .id = {0xc8, 0x21} },
+ 		SZ_2K, SZ_128, SZ_128K, 0, 2, 64, NAND_ECC_INFO(4, SZ_512), 0},
++	{"GD5F1GM7REYIG SPI NAND 1G 1.8V",
++		{ .id = {0xc8, 0x81} },
++		SZ_2K, SZ_128, SZ_128K, 0, 2, 128, NAND_ECC_INFO(8, SZ_512), 0},
++	{"GD5F2GM7REYIG SPI NAND 2G 1.8V",
++		{ .id = {0xc8, 0x82} },
++		SZ_2K, SZ_128, SZ_128K, 0, 2, 128, NAND_ECC_INFO(8, SZ_512), 0},
+ 	{"W25N01GW SPI NAND 1.8V 1G-BIT",
+ 		{ .id = {0xef, 0xba} },
+ 		SZ_2K, SZ_128, SZ_128K, 0, 2, 64, NAND_ECC_INFO(4, SZ_512), 0},
+-- 
+2.17.1
+
