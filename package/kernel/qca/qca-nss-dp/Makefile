@@ -2,13 +2,15 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=qca-nss-dp
-PKG_VERSION:=NHSS.QSDK.11.5.0.5
-PKG_RELEASE:=1
-
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://git.codelinaro.org/clo/qsdk/oss/lklm/nss-dp
-PKG_SOURCE_VERSION:=480f036cc96d4e5faa426cfcf90fa7e64dff87e8
-PKG_MIRROR_HASH:=skip
+PKG_BRANCH:=master
+PKG_RELEASE:=1
+MAKE_OPTS:=
+
+include $(INCLUDE_DIR)/local-development.mk
+ifeq ($(DUMP)$(PKG_VERSION),)
+  PKG_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) | cut -b -7)
+endif
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -16,8 +18,10 @@ define KernelPackage/qca-nss-dp
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Devices
-  DEPENDS:=@(TARGET_ipq50xx||TARGET_ipq60xx||TARGET_ipq807x) \
-	+kmod-qca-ssdk-nohnat
+  DEPENDS:=@TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64||TARGET_ipq807x||TARGET_ipq_ipq60xx||TARGET_ipq_ipq60xx_64||TARGET_ipq60xx||TARGET_ipq_ipq50xx||TARGET_ipq_ipq50xx_64||TARGET_ipq50xx||TARGET_ipq95xx||TARGET_ipq53xx\
+		+kmod-qca-ssdk-nohnat \
+		+TARGET_ipq95xx:kmod-qca-nss-ppe \
+		+TARGET_ipq53xx:kmod-qca-nss-ppe
   TITLE:=Kernel driver for NSS data plane
   FILES:=$(PKG_BUILD_DIR)/qca-nss-dp.ko
   AUTOLOAD:=$(call AutoLoad,31,qca-nss-dp)
@@ -33,12 +37,28 @@ define Build/InstallDev
 endef
 
 EXTRA_CFLAGS+= \
-	-I$(STAGING_DIR)/usr/include/qca-ssdk
+	-I$(STAGING_DIR)/usr/include/qca-ssdk \
+	-I$(STAGING_DIR)/usr/include/qca-nss-ppe
 
 ifeq ($(CONFIG_TARGET_ipq),y)
 subtarget:=$(SUBTARGET)
 else
 subtarget:=$(CONFIG_TARGET_BOARD)
+endif
+
+ifeq ($(CONFIG_KERNEL_IPQ_MEM_PROFILE),256)
+EXTRA_CFLAGS+= -DNSS_DP_MEM_PROFILE_LOW
+else ifeq ($(CONFIG_LOWMEM_FLASH),y)
+EXTRA_CFLAGS+= -DNSS_DP_MEM_PROFILE_LOW
+else ifeq ($(CONFIG_KERNEL_IPQ_MEM_PROFILE),512)
+EXTRA_CFLAGS+= -DNSS_DP_MEM_PROFILE_MEDIUM
+endif
+
+ifeq ($(CONFIG_TARGET_ipq95xx_generic_QSDK_MinEnt), y)
+EXTRA_CFLAGS+= -DNSS_DP_POINT_OFFLOAD
+endif
+ifneq ($(CONFIG_TARGET_ipq95xx)$(CONFIG_TARGET_ipq53xx),)
+MAKE_OPTS+=dp-ppe-ds=y
 endif
 
 NSS_DP_HAL_DIR:=$(PKG_BUILD_DIR)/hal
@@ -50,13 +70,26 @@ else
 hal_arch:=$(subtarget)
 endif
 
+ifneq (, $(findstring $(hal_arch),"ipq95xx" "ipq53xx"))
+define KernelPackage/qca-nss-dp/install
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./files/qca-nss-dp.init $(1)/etc/init.d/qca-nss-dp
+	$(INSTALL_BIN) ./files/qca-nss-dp.conf $(1)/etc/config/qca_nss_dp
+	$(INSTALL_BIN) ./files/qca-nss-dp.hotplug $(1)/etc/hotplug.d/iface/17-bridge
+	$(INSTALL_BIN) ./files/edma_dump $(1)/usr/bin/edma_dump
+endef
+endif
+
 define Build/Configure
 	$(LN) $(NSS_DP_HAL_DIR)/soc_ops/$(hal_arch)/nss_$(hal_arch).h \
 		$(PKG_BUILD_DIR)/exports/nss_dp_arch.h
 endef
 
 define Build/Compile
-	$(MAKE) -C "$(LINUX_DIR)" \
+	$(MAKE) -C "$(LINUX_DIR)" $(strip $(MAKE_OPTS)) \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
 		ARCH="$(LINUX_KARCH)" \
 		M="$(PKG_BUILD_DIR)" \
